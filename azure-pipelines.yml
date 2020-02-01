@@ -12,8 +12,6 @@ trigger:
       - src/*
 
 variables:
-  - group: GitRelease
-
   - name: patch
     value: $[counter('versioncounter', 100)]
   - name: buildPlatform
