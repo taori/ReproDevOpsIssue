@@ -105,6 +105,19 @@ jobs:
         & dotnet publish $(Build.SourcesDirectory)\src\App2\App2.csproj -r win-x64 -f netcoreapp2.1 -c $(buildConfiguration) --self-contained true -o $(Build.ArtifactStagingDirectory)\cli-netcore2.1-standalone
         & dotnet publish $(Build.SourcesDirectory)\src\App2\App2.csproj -r win-x64 -f netcoreapp2.1 -c $(buildConfiguration) --self-contained false -o $(Build.ArtifactStagingDirectory)\cli-netcore2.1-shared
 
+
+  - task: DotNetCoreCLI@2
+    displayName: 'pack using netcore command'
+    inputs:
+      command: 'pack'
+      packagesToPack: '**/*.csproj'
+      configuration: 'Release'
+      packDirectory: '$(Build.ArtifactStagingDirectory)\nupkg'
+      versioningScheme: 'off'
+      buildProperties: 'IncludeSymbols=True;PackAsTool=True;SymbolPackageFormat=snupkg;VersionSuffix=alpha;VersionPrefix=1.2.3.4'
+      verbosityPack: 'Minimal'
+
+
   - task: PowerShell@2
     condition: and(succeeded(), eq(variables['BUILD_IS_RELEASE'], 'True'))
     displayName: dotnet pack release
