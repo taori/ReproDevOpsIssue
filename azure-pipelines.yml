@@ -114,7 +114,7 @@ jobs:
       configuration: 'Release'
       packDirectory: '$(Build.ArtifactStagingDirectory)\nupkg'
       versioningScheme: 'off'
-      buildProperties: 'IncludeSymbols=True;PackAsTool=True;SymbolPackageFormat=snupkg;VersionSuffix=alpha;VersionPrefix=1.2.3.4'
+      buildProperties: 'IncludeSymbols=True;PackAsTool=True;SymbolPackageFormat=snupkg;VersionSuffix=alpha;VersionPrefix=9.8.7'
       verbosityPack: 'Minimal'
 
 
