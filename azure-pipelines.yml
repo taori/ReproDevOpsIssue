@@ -119,10 +119,10 @@ jobs:
     inputs:
       targetType: 'inline'
       script: |
-        mkdir $(Build.ArtifactStagingDirectory)\nupkg
+        #mkdir $(Build.ArtifactStagingDirectory)\nupkg
         Write-Host $(PackageVersion)
         Write-Host $(PackageVersionCLI)
-        & dotnet pack $(Build.SourcesDirectory)\src\App2\App2.csproj -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)\nupkg /p:PackAsTool=true /p:VersionPrefix=$(PackageVersionCLI) /p:SymbolPackageFormat=snupkg --include-symbols --version-suffix=beta
+        & dotnet pack $(Build.SourcesDirectory)\src\App2\App2.csproj -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory) /p:PackAsTool=true /p:VersionPrefix=$(PackageVersionCLI) /p:SymbolPackageFormat=snupkg --include-symbols --version-suffix=beta
 
   - task: PowerShell@2
     condition: and(succeeded(), eq(variables['BUILD_IS_ALPHA'], 'True'))
@@ -131,13 +131,13 @@ jobs:
       targetType: 'inline'
       script: |
         dotnet --version
-        mkdir $(Build.ArtifactStagingDirectory)\nupkg
+        #mkdir $(Build.ArtifactStagingDirectory)\nupkg
         Write-Host $(PackageVersion)
         Write-Host $(PackageVersionCLI)
-        $commandSample = "dotnet pack $(Build.SourcesDirectory)\src\App2\App2.csproj -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)\nupkg /p:PackAsTool=true /p:VersionPrefix=$(PackageVersionCLI) /p:SymbolPackageFormat=snupkg --include-symbols --version-suffix=alpha"
+        $commandSample = "dotnet pack $(Build.SourcesDirectory)\src\App2\App2.csproj -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory) /p:PackAsTool=true /p:VersionPrefix=$(PackageVersionCLI) /p:SymbolPackageFormat=snupkg --include-symbols --version-suffix=alpha"
         Write-Host $commandSample
         Invoke-Expression $commandSample
-        & dotnet pack $(Build.SourcesDirectory)\src\App2\App2.csproj -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)\nupkg /p:PackAsTool=true /p:VersionPrefix=$(PackageVersionCLI) /p:SymbolPackageFormat=snupkg --include-symbols --version-suffix=alpha
+        & dotnet pack $(Build.SourcesDirectory)\src\App2\App2.csproj -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory) /p:PackAsTool=true /p:VersionPrefix=$(PackageVersionCLI) /p:SymbolPackageFormat=snupkg --include-symbols --version-suffix=alpha
 
   - task: CopyFiles@2
     condition: and(succeeded(), eq(variables['BUILD_PUBLISH_ARTIFACTS'],'True'))
