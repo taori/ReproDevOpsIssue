@@ -62,7 +62,13 @@ jobs:
       restoreSolution: '**/*.sln'
       feedsToUse: 'select'
 
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: 'build'
+      projects: '**/*.csproj -c $(buildConfiguration)'
+
   - task: VSBuild@1
+    enabled: false
     inputs:
       solution: '**\*.sln'
       platform: '$(buildPlatform)'
