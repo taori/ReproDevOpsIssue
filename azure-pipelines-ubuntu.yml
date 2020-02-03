@@ -70,6 +70,7 @@ jobs:
       arguments: '-c $(buildConfiguration)'
 
   - task: DotNetCoreCLI@2
+    displayName: 'dotnet test'
     inputs:
       command: 'test'
       projects: '**/*.csproj'
@@ -109,8 +110,6 @@ jobs:
       targetType: 'inline'
       script: |
         mkdir $(Build.ArtifactStagingDirectory)\nupkg
-        Write-Host $(PackageVersion)
-        Write-Host $(PackageVersionCLI)
         & dotnet pack $(Build.SourcesDirectory)\src\App2\App2.csproj -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)\nupkg /p:PackAsTool=true /p:VersionPrefix=5.6.7 /p:SymbolPackageFormat=snupkg --include-symbols --version-suffix=beta
 
   - task: PowerShell@2
@@ -121,8 +120,6 @@ jobs:
       script: |
         dotnet --version
         mkdir $(Build.ArtifactStagingDirectory)\nupkg
-        Write-Host $(PackageVersion)
-        Write-Host $(PackageVersionCLI)
         $commandSample = "dotnet pack $(Build.SourcesDirectory)\src\App2\App2.csproj -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)\nupkg /p:PackAsTool=true /p:VersionPrefix=5.6.7 /p:SymbolPackageFormat=snupkg --include-symbols --version-suffix=alpha"
         Write-Host $commandSample
         Invoke-Expression $commandSample
