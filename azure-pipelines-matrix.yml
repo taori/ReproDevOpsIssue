@@ -11,9 +11,6 @@ trigger:
     include:
       - src/*
 
-#pool:
- # vmImage: 'ubuntu-latest'
-
 jobs:
 
 - job:
@@ -28,20 +25,16 @@ jobs:
         imageName: 'vs2017-win2016'
       windows2019:
         imageName: 'win2019'
+    maxParallel: 4
   variables:
-    manualOut: '$(Build.ArtifactStagingDirectory)\$(imageName)\packManual'
-    taskOut: '$(Build.ArtifactStagingDirectory)\$(imageName)\packTask'
+    manualOut: '$(Build.ArtifactStagingDirectory)\packManual'
+    taskOut: '$(Build.ArtifactStagingDirectory)\packTask'
   pool:
     vmImage: $(imageName)
   
   displayName: Build
   condition: succeeded()
   steps:
-
-  - task: NuGetToolInstaller@1
-    enabled: false
-    inputs:
-      versionSpec: '4.x'
 
   - task: DotNetCoreCLI@2
     displayName: 'dotnet restore'
@@ -85,5 +78,5 @@ jobs:
 
   - task: PublishPipelineArtifact@0
     inputs:
-      artifactName: 'drop'
+      artifactName: 'drop/$(imageName)'
       targetPath: '$(Build.ArtifactStagingDirectory)'
