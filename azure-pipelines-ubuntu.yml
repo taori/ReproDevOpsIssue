@@ -63,9 +63,11 @@ jobs:
       feedsToUse: 'select'
 
   - task: DotNetCoreCLI@2
+    displayName: 'dotnet build'
     inputs:
       command: 'build'
-      projects: '**/*.csproj -c $(buildConfiguration)'
+      projects: '**/*.csproj'
+      arguments: '-c $(buildConfiguration)'
 
   - task: VSBuild@1
     enabled: false
