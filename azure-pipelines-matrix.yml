@@ -68,8 +68,8 @@ jobs:
       targetType: 'inline'
       script: |
         mkdir $(manualOut)
-        & dotnet pack $(Build.SourcesDirectory)\src\App1\App1.csproj -c Release -o $(manualOut) /p:PackAsTool=true /p:VersionPrefix=9.8.7 /p:SymbolPackageFormat=snupkg /p:IncludeSymbols=True /p:VersionSuffix=manual
-        & dotnet pack $(Build.SourcesDirectory)\src\App2\App2.csproj -c Release -o $(manualOut) /p:PackAsTool=true /p:VersionPrefix=9.8.7 /p:SymbolPackageFormat=snupkg /p:IncludeSymbols=True /p:VersionSuffix=manual
+        & dotnet pack $(Build.SourcesDirectory)\src\App1\App1.csproj -c Release -o $(manualOut) /p:PackAsTool=true /p:VersionPrefix=9.8.7 /p:SymbolPackageFormat=snupkg /p:IncludeSymbols=True --version-suffix manual
+        & dotnet pack $(Build.SourcesDirectory)\src\App2\App2.csproj -c Release -o $(manualOut) /p:PackAsTool=true /p:VersionPrefix=9.8.7 /p:SymbolPackageFormat=snupkg /p:IncludeSymbols=True --version-suffix manual
 
   - task: PublishPipelineArtifact@0
     inputs:
