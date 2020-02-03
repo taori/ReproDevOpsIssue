@@ -74,21 +74,18 @@ jobs:
       restoreSolution: '**/*.sln'
       feedsToUse: 'select'
 
-  - task: VSBuild@1
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet build'
     inputs:
-      solution: '**\*.sln'
-      platform: '$(buildPlatform)'
-      configuration: '$(buildConfiguration)'
+      command: 'build'
+      projects: '**/*.csproj'
+      arguments: '-c $(buildConfiguration)'
 
-  - task: VSTest@2
-    condition: succeeded()
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet test'
     inputs:
-      testSelector: 'testAssemblies'
-      testAssemblyVer2: |
-        **\*test*.dll
-        !**\*TestAdapter.dll
-        !**\obj\**
-      searchFolder: '$(System.DefaultWorkingDirectory)'
+      command: 'test'
+      projects: '**/*.csproj'
 
   - task: PowerShell@2
     condition: and(succeeded(), eq(variables['BUILD_PUBLISH_ARTIFACTS'], 'True'))
@@ -105,7 +102,6 @@ jobs:
         & dotnet publish $(Build.SourcesDirectory)\src\App2\App2.csproj -r win-x64 -f netcoreapp2.1 -c $(buildConfiguration) --self-contained true -o $(Build.ArtifactStagingDirectory)\cli-netcore2.1-standalone
         & dotnet publish $(Build.SourcesDirectory)\src\App2\App2.csproj -r win-x64 -f netcoreapp2.1 -c $(buildConfiguration) --self-contained false -o $(Build.ArtifactStagingDirectory)\cli-netcore2.1-shared
 
-
   - task: DotNetCoreCLI@2
     displayName: 'pack using netcore command'
     inputs:
@@ -116,7 +112,6 @@ jobs:
       versioningScheme: 'off'
       buildProperties: 'IncludeSymbols=True;PackAsTool=True;SymbolPackageFormat=snupkg;VersionSuffix=alpha;VersionPrefix=9.8.7'
       verbosityPack: 'Minimal'
-
 
   - task: PowerShell@2
     condition: and(succeeded(), eq(variables['BUILD_IS_RELEASE'], 'True'))
