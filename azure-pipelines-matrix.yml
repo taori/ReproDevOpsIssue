@@ -32,7 +32,7 @@ jobs:
     manualOut: '$(Build.ArtifactStagingDirectory)\$(imageName)\packManual'
     taskOut: '$(Build.ArtifactStagingDirectory)\$(imageName)\packTask'
   pool:
-    name: $(imageName)
+    vmImage: $(imageName)
   
   displayName: Build
   condition: succeeded()
