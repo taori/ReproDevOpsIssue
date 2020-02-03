@@ -1,0 +1,154 @@
+# https://aka.ms/yaml
+
+trigger:
+ branches:
+   include:
+    - master
+    - features/*
+    - feature/*
+    - releases/*
+ paths:
+    include:
+      - src/*
+
+variables:
+  - name: patch
+    value: $[counter('versioncounter', 100)]
+  - name: buildPlatform
+    value: 'Any CPU'
+  - name: buildConfiguration
+    value: 'Release'
+  - name: GitHubApplicationName
+    value: 'Amusoft.VisualStudio.TemplateGenerator'
+  - name: GitHubRepoName
+    value: 'Amusoft.VisualStudio.TemplateGenerator'
+  - name: GitHubAssetsPattern
+    value: '$(Build.ArtifactStagingDirectory)\*.zip'
+  - name: GitHubAccessToken
+    value: '$(gitAccessToken)'
+  - name: DOTNET_SKIP_FIRST_TIME_EXPERIENCE
+    value: 1
+  - name: BUILD_PUBLISH_ARTIFACTS
+    value: $[or(startsWith(variables['Build.SourceBranch'], 'refs/heads/releases/'), eq(variables['Build.SourceBranch'], 'refs/heads/master'))]
+  - name: BUILD_IS_RELEASE
+    value: $[startsWith(variables['Build.SourceBranch'], 'refs/heads/releases/')]
+  - name: BUILD_IS_ALPHA
+    value: $[eq(variables['Build.SourceBranch'], 'refs/heads/master')]
+
+pool:
+  vmImage: 'macOS-latest'
+
+jobs:
+
+- job:
+  displayName: Build
+  condition: succeeded()
+  steps:
+
+  - task: NuGetToolInstaller@1
+    inputs:
+      versionSpec: '4.x'
+
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: 'restore'
+      projects: '**/*.csproj'
+      feedsToUse: 'select'
+      
+  - task: NuGetCommand@2
+    enabled: false
+    inputs:
+      command: 'restore'
+      restoreSolution: '**/*.sln'
+      feedsToUse: 'select'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet build'
+    inputs:
+      command: 'build'
+      projects: '**/*.csproj'
+      arguments: '-c $(buildConfiguration)'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet test'
+    inputs:
+      command: 'test'
+      projects: '**/*.csproj'
+
+  - task: PowerShell@2
+    condition: and(succeeded(), eq(variables['BUILD_PUBLISH_ARTIFACTS'], 'True'))
+    displayName: dotnet publish
+    inputs:
+      targetType: 'inline'
+      script: |
+        mkdir $(Build.ArtifactStagingDirectory)\desktop
+        & dotnet build $(Build.SourcesDirectory)\src\App1\App1.csproj -r win-x64 -c $(buildConfiguration)
+        & dotnet publish $(Build.SourcesDirectory)\src\App1\App1 -r win-x64 -c $(buildConfiguration) --self-contained --no-build -o $(Build.ArtifactStagingDirectory)\desktop
+        
+        mkdir $(Build.ArtifactStagingDirectory)\cli-netcore2.1-standalone
+        mkdir $(Build.ArtifactStagingDirectory)\cli-netcore2.1-shared
+        & dotnet publish $(Build.SourcesDirectory)\src\App2\App2.csproj -r win-x64 -f netcoreapp2.1 -c $(buildConfiguration) --self-contained true -o $(Build.ArtifactStagingDirectory)\cli-netcore2.1-standalone
+        & dotnet publish $(Build.SourcesDirectory)\src\App2\App2.csproj -r win-x64 -f netcoreapp2.1 -c $(buildConfiguration) --self-contained false -o $(Build.ArtifactStagingDirectory)\cli-netcore2.1-shared
+
+
+  - task: DotNetCoreCLI@2
+    displayName: 'pack using netcore command'
+    inputs:
+      command: 'pack'
+      packagesToPack: '**/*.csproj'
+      configuration: 'Release'
+      packDirectory: '$(Build.ArtifactStagingDirectory)\nupkg'
+      versioningScheme: 'off'
+      buildProperties: 'IncludeSymbols=True;PackAsTool=True;SymbolPackageFormat=snupkg;VersionSuffix=alpha;VersionPrefix=9.8.7'
+      verbosityPack: 'Minimal'
+
+
+  - task: PowerShell@2
+    condition: and(succeeded(), eq(variables['BUILD_IS_RELEASE'], 'True'))
+    displayName: dotnet pack release
+    inputs:
+      targetType: 'inline'
+      script: |
+        mkdir $(Build.ArtifactStagingDirectory)\nupkg
+        & dotnet pack $(Build.SourcesDirectory)\src\App2\App2.csproj -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)\nupkg /p:PackAsTool=true /p:VersionPrefix=5.6.7 /p:SymbolPackageFormat=snupkg --include-symbols --version-suffix=beta
+
+  - task: PowerShell@2
+    condition: and(succeeded(), eq(variables['BUILD_IS_ALPHA'], 'True'))
+    displayName: dotnet pack alpha
+    inputs:
+      targetType: 'inline'
+      script: |
+        dotnet --version
+        mkdir $(Build.ArtifactStagingDirectory)\nupkg
+        $commandSample = "dotnet pack $(Build.SourcesDirectory)\src\App2\App2.csproj -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)\nupkg /p:PackAsTool=true /p:VersionPrefix=5.6.7 /p:SymbolPackageFormat=snupkg --include-symbols --version-suffix=alpha"
+        Write-Host $commandSample
+        Invoke-Expression $commandSample
+        & dotnet pack $(Build.SourcesDirectory)\src\App2\App2.csproj -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)\nupkg /p:PackAsTool=true /p:VersionPrefix=5.6.7 /p:SymbolPackageFormat=snupkg --include-symbols --version-suffix=alpha
+
+  - task: CopyFiles@2
+    condition: and(succeeded(), eq(variables['BUILD_PUBLISH_ARTIFACTS'],'True'))
+    inputs:
+      SourceFolder: '$(Build.SourcesDirectory)'
+      Contents: |
+        **/*.md
+      TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+  - task: PowerShell@2
+    condition: and(succeeded(), eq(variables['BUILD_PUBLISH_ARTIFACTS'],'True'))
+    displayName: zip artifacts
+    inputs:
+      targetType: 'inline'
+      script: |
+        7z a $(Build.ArtifactStagingDirectory)\TemplateGenerator_asd_win64.zip $(Build.ArtifactStagingDirectory)\*
+
+  - task: PublishPipelineArtifact@0
+    condition: and(succeeded(), eq(variables['BUILD_PUBLISH_ARTIFACTS'],'True'))
+    inputs:
+      artifactName: 'drop'
+      targetPath: '$(Build.ArtifactStagingDirectory)\TemplateGenerator_asd_win64.zip'
+
+  - task: PublishPipelineArtifact@0
+    condition: and(succeeded(), eq(variables['BUILD_PUBLISH_ARTIFACTS'],'True'))
+    inputs:
+      artifactName: 'nupkg'
+      targetPath: '$(Build.ArtifactStagingDirectory)\nupkg'
