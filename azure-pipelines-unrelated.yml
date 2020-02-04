@@ -1,0 +1,33 @@
+# https://aka.ms/yaml
+
+trigger:
+ branches:
+   include:
+    - master
+    - features/*
+    - feature/*
+    - releases/*
+ paths:
+    include:
+      - src/*
+      
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  
+  - task: PowerShell@2
+    condition: and(True, 'True')
+    displayName: message
+    inputs:
+      targetType: 'inline'
+      script: |
+        Write-Host "hi"
+
+  - task: PowerShell@2
+    condition: eq(True, 'True')
+    displayName: message
+    inputs:
+      targetType: 'inline'
+      script: |
+        Write-Host "hi"
